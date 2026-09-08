@@ -266,19 +266,19 @@ function renderPricing() {
   let body = '';
   for (const p of prods) {
     const rs = rivalsOf(p).slice().sort((a, b) => (a.price ?? 1e9) - (b.price ?? 1e9));
-    if (prods.length > 1) body += `<tr class="group"><td colspan="4">${esc(p.own_product)}</td></tr>`;
+    if (prods.length > 1) body += `<tr class="group"><td colspan="3">${esc(p.own_product)}</td></tr>`;
+    const oos = a => (a || '').toLowerCase().includes('in stock') ? '' : ' <span class="oosb">out of stock</span>';
     body += `<tr class="ours"><td>${who(OUR + ' — ' + p.own_product, '', p.own_asin, p.our_image)}</td>
-      <td>${inr(p.our_price)}</td><td><span class="muted">reference</span></td><td>${avail(p.our_availability)}</td></tr>`;
-    if (!rs.length) body += `<tr class="rival"><td colspan="4" class="muted">no selected competitors matched to this product</td></tr>`;
+      <td>${inr(p.our_price)}${oos(p.our_availability)}</td><td><span class="muted">reference</span></td></tr>`;
+    if (!rs.length) body += `<tr class="rival"><td colspan="3" class="muted">no selected competitors matched to this product</td></tr>`;
     for (const r of rs) {
       body += `<tr class="rival"><td>${who(r.brand, r.name, r.asin, r.image)}</td>
-        <td>${r.pending ? '<span class="pendb">scrape queued</span>' : inr(r.price)}</td>
-        <td>${r.pending ? '<span class="muted">—</span>' : priceDelta(p.our_price, r.price)}</td>
-        <td>${r.pending ? '<span class="muted">—</span>' : avail(r.availability)}</td></tr>`;
+        <td>${r.pending ? '<span class="pendb">scrape queued</span>' : inr(r.price) + oos(r.availability)}</td>
+        <td>${r.pending ? '<span class="muted">—</span>' : priceDelta(p.our_price, r.price)}</td></tr>`;
     }
   }
   $('#panel').innerHTML = `<table>
-    <thead><tr><th>Product / competitor</th><th>Price</th><th>Difference vs ours</th><th>Stock</th></tr></thead>
+    <thead><tr><th>Product / competitor</th><th>Their price</th><th>Difference vs ours</th></tr></thead>
     <tbody>${body}</tbody></table>`;
   $('#drill').innerHTML = '';
 }
