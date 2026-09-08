@@ -6,76 +6,103 @@
 <title>Competitor Tracking — AreoVeda</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 <style>
+  /* tokens lifted from app.meerkats.ai */
   :root {
-    --bg:#faf9f7; --card:#ffffff; --ink:#1c1917; --ink-2:#57534e; --ink-3:#a8a29e;
-    --line:#e7e5e4; --line-soft:#f5f5f4;
-    --accent:#ea580c; --accent-soft:#fff7ed;
-    --good:#15803d; --good-bg:#f0fdf4; --bad:#b91c1c; --bad-bg:#fef2f2; --warn:#a16207; --warn-bg:#fefce8;
-    --mono:ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+    --bg:#ffffff; --bg-2:#fafafa; --bg-3:#f4f4f6;
+    --ink:#101827; --ink-2:#3c4754; --ink-3:#6b7380; --ink-4:#9ca3ad;
+    --line:#e5e5ea; --line-2:#ededf0; --line-3:#f4f4f6;
+    --accent:#ff6125; --accent-2:#ea4f10; --accent-soft:#ffe2d4; --accent-tint:#fff5ef;
+    --good:#15803d; --good-bg:#f0fdf4; --bad:#dc2626; --bad-bg:#fef2f2; --warn:#a16207; --warn-bg:#fefce8;
+    --font-ui:"Inter",system-ui,-apple-system,sans-serif;
   }
   *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
-  .wrap{max-width:1120px;margin:0 auto;padding:28px 24px 64px}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-ui);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  .wrap{max-width:1180px;margin:0 auto;padding:28px 28px 72px}
 
-  header{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:4px}
-  h1{font-size:22px;font-weight:700;letter-spacing:-.02em;margin:0}
+  header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:22px}
+  h1{font-size:20px;font-weight:600;letter-spacing:-.01em;margin:0}
   .ws{color:var(--ink-3);font-size:13px}
-  .scopebar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0 24px;color:var(--ink-2);font-size:13px}
-  .chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:3px 12px;font-size:12.5px;color:var(--ink-2)}
-  .chip .dot{width:7px;height:7px;border-radius:50%;background:var(--good)}
+  .asof{margin-left:auto;display:inline-flex;align-items:center;gap:7px;background:var(--bg-2);border:1px solid var(--line-2);border-radius:8px;padding:5px 12px;font-size:12.5px;color:var(--ink-2)}
+  .asof .dot{width:7px;height:7px;border-radius:50%;background:var(--good)}
 
-  .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:28px}
-  .tile{background:var(--card);padding:16px 18px}
+  .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:24px}
+  .tile{background:var(--bg);border:1px solid var(--line-2);border-radius:12px;padding:16px 18px}
   .tile .n{font-size:24px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+  .tile .n.accent{color:var(--accent-2)}
   .tile .l{font-size:12px;color:var(--ink-3);margin-top:2px}
-  .tile .n.accent{color:var(--accent)}
+  .tile .vs{color:var(--ink-4);font-size:13px;font-weight:500}
+
+  /* competitor selector */
+  .selbar{background:var(--bg-2);border:1px solid var(--line-2);border-radius:12px;padding:14px 16px;margin-bottom:20px}
+  .selhead{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+  .selhead .t{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
+  .selhead .actions{margin-left:auto;display:flex;gap:8px}
+  .linkbtn{background:none;border:none;font:inherit;font-size:12.5px;font-weight:500;color:var(--accent-2);cursor:pointer;padding:2px 4px}
+  .linkbtn:hover{text-decoration:underline}
+  .chips{display:flex;flex-wrap:wrap;gap:7px}
+  .cchip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:4px 12px;font-size:12.5px;font-weight:500;color:var(--ink-2);cursor:pointer;user-select:none;transition:all .12s}
+  .cchip:hover{border-color:var(--accent);color:var(--ink)}
+  .cchip.on{background:var(--accent-tint);border-color:var(--accent);color:var(--accent-2)}
+  .cchip .ct{font-size:11px;color:var(--ink-4);font-weight:400}
+  .cchip.on .ct{color:var(--accent)}
+  .addbtn{display:inline-flex;align-items:center;gap:6px;background:var(--accent);color:#fff;border:none;border-radius:8px;font:inherit;font-size:13px;font-weight:600;padding:7px 14px;cursor:pointer}
+  .addbtn:hover{background:var(--accent-2)}
 
   .tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-bottom:0}
-  .tab{background:none;border:none;border-bottom:2px solid transparent;font:inherit;font-size:14px;font-weight:500;color:var(--ink-2);padding:9px 14px;cursor:pointer}
+  .tab{background:none;border:none;border-bottom:2px solid transparent;font:inherit;font-size:14px;font-weight:500;color:var(--ink-3);padding:9px 16px;cursor:pointer}
   .tab.on{color:var(--ink);font-weight:600;border-bottom-color:var(--accent)}
   .tab:hover{color:var(--ink)}
 
-  .panel{background:var(--card);border:1px solid var(--line);border-top:none;border-radius:0 0 12px 12px;overflow-x:auto}
-  table{border-collapse:collapse;width:100%;min-width:820px;font-variant-numeric:tabular-nums}
-  th{text-align:left;font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3);padding:12px 14px;border-bottom:1px solid var(--line);white-space:nowrap}
-  th.r,td.r{text-align:right}
-  td{padding:11px 14px;border-bottom:1px solid var(--line-soft);vertical-align:middle}
-  tbody tr.prod{cursor:pointer}
-  tbody tr.prod:hover td{background:var(--accent-soft)}
-  .pname{font-weight:600}
-  .sub{color:var(--ink-3);font-size:12px}
+  .panel{background:var(--bg);border:1px solid var(--line-2);border-top:none;border-radius:0 0 12px 12px;overflow-x:auto}
+  table{border-collapse:separate;border-spacing:0;width:max-content;min-width:100%;font-variant-numeric:tabular-nums}
+  th{position:sticky;top:0;background:var(--bg-2);text-align:right;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);padding:11px 14px;border-bottom:1px solid var(--line);white-space:nowrap}
+  th.rowlab{text-align:left}
+  td{padding:10px 14px;border-bottom:1px solid var(--line-3);text-align:right;white-space:nowrap}
+  tr:last-child td{border-bottom:none}
+  td.rowlab,th.rowlab{position:sticky;left:0;background:var(--bg);z-index:2;text-align:left;font-weight:500;border-right:1px solid var(--line-2);min-width:200px;max-width:260px;white-space:normal}
+  th.rowlab{background:var(--bg-2);z-index:3}
+  td.ours,th.ours{background:var(--accent-tint);font-weight:600}
+  th.ours{color:var(--accent-2)}
+  tbody tr:hover td:not(.ours){background:var(--bg-2)}
+  td .sub{display:block;font-size:11px;color:var(--ink-4);font-weight:400}
+  td.cheaper{color:var(--bad)}
+  td.pricier{color:var(--good)}
+  td.empty{color:var(--line)}
+  .oosb{display:inline-block;font-size:10.5px;font-weight:600;background:var(--warn-bg);color:var(--warn);border-radius:5px;padding:1px 6px;margin-left:5px}
+  .pendb{display:inline-block;font-size:10.5px;font-weight:600;background:var(--bg-3);color:var(--ink-4);border-radius:5px;padding:1px 6px}
 
-  .pos{display:inline-block;font-weight:600;font-size:12.5px;border-radius:6px;padding:2px 8px;white-space:nowrap}
-  .pos.hi{background:var(--bad-bg);color:var(--bad)}
-  .pos.mid{background:var(--warn-bg);color:var(--warn)}
-  .pos.lo{background:var(--good-bg);color:var(--good)}
-  .pos.na{background:var(--line-soft);color:var(--ink-3)}
-  .stars{white-space:nowrap}
-  .stars b{font-weight:600}
-  .vs{color:var(--ink-3);font-size:12px}
-  .flag{display:inline-block;font-size:11.5px;font-weight:600;border-radius:6px;padding:2px 8px;margin-left:6px}
-  .flag.oos{background:var(--warn-bg);color:var(--warn)}
-  .flag.risk{background:var(--bad-bg);color:var(--bad)}
-  .flag.win{background:var(--good-bg);color:var(--good)}
+  .cellstars{font-weight:600}
+  .cellstars.low{color:var(--bad)}
+  .cellstars.high{color:var(--good)}
 
-  .rivals td{background:var(--bg);padding:8px 14px 8px 34px;border-bottom:1px solid var(--line-soft);font-size:13px}
-  .rivals .rname{color:var(--ink-2)}
-  .cheaper{color:var(--bad);font-weight:600}
-  .oostxt{color:var(--warn);font-weight:600}
-
-  .reviews{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px;padding:16px}
-  .rev{border:1px solid var(--line);border-radius:10px;background:var(--card);padding:14px 16px}
-  .rev .head{display:flex;justify-content:space-between;gap:8px;margin-bottom:6px;align-items:baseline}
-  .rev .prod{font-size:12px;color:var(--accent);font-weight:600}
-  .rev .st{font-size:12.5px;font-weight:700;white-space:nowrap}
+  /* review drill-down */
+  .drill{border-top:1px solid var(--line-2);background:var(--bg-2);padding:16px}
+  .drill h3{margin:0 0 10px;font-size:13px;font-weight:600;color:var(--ink-2)}
+  .drill .close{float:right}
+  .revgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px}
+  .rev{background:var(--bg);border:1px solid var(--line-2);border-radius:10px;padding:12px 14px}
+  .rev .head{display:flex;justify-content:space-between;gap:8px;margin-bottom:4px;align-items:baseline}
+  .rev .st{font-size:12.5px;font-weight:700}
   .rev .st.low{color:var(--bad)} .rev .st.high{color:var(--good)}
-  .rev .t{font-weight:600;font-size:13px;margin-bottom:3px}
-  .rev .s{color:var(--ink-2);font-size:13px}
-  .rev .d{color:var(--ink-3);font-size:11.5px;margin-top:8px}
+  .rev .t{font-weight:600;font-size:13px;margin-bottom:2px}
+  .rev .s{color:var(--ink-2);font-size:12.5px}
+  .rev .d{color:var(--ink-4);font-size:11px;margin-top:6px}
 
-  .note{color:var(--ink-3);font-size:12.5px;margin-top:14px}
-  .err{background:var(--bad-bg);color:var(--bad);border-radius:10px;padding:14px 16px;margin:16px 0}
-  .skel{color:var(--ink-3);padding:24px;text-align:center}
+  /* modal */
+  .overlay{position:fixed;inset:0;background:rgb(16 24 39 / .45);display:flex;align-items:center;justify-content:center;z-index:50}
+  .modal{background:var(--bg);border-radius:14px;padding:24px;width:min(440px,92vw);box-shadow:0 20px 50px rgb(16 24 39/.25)}
+  .modal h2{margin:0 0 4px;font-size:16px;font-weight:600}
+  .modal p.hint{margin:0 0 16px;color:var(--ink-3);font-size:12.5px}
+  .field{margin-bottom:12px}
+  .field label{display:block;font-size:12px;font-weight:600;color:var(--ink-2);margin-bottom:4px}
+  .field input,.field select{width:100%;font:inherit;font-size:13.5px;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--bg)}
+  .field input:focus,.field select:focus{outline:2px solid var(--accent-soft);border-color:var(--accent)}
+  .modal .row{display:flex;gap:10px;justify-content:flex-end;margin-top:18px}
+  .btn2{background:var(--bg);border:1px solid var(--line);border-radius:8px;font:inherit;font-size:13px;font-weight:500;padding:7px 14px;cursor:pointer;color:var(--ink-2)}
+  .merr{color:var(--bad);font-size:12.5px;margin-top:10px;min-height:1em}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;border-radius:10px;padding:10px 18px;font-size:13px;z-index:60;box-shadow:0 8px 24px rgb(16 24 39/.3)}
+  .skel{color:var(--ink-4);padding:28px;text-align:center}
+  .err{background:var(--bad-bg);color:var(--bad);border-radius:10px;padding:14px 16px;margin:16px}
 </style>
 </head>
 <body>
@@ -83,120 +110,193 @@
   <header>
     <h1>Competitor Tracking</h1>
     <span class="ws">AreoVeda · Amazon India</span>
+    <span class="asof"><span class="dot"></span><span id="asof">loading…</span></span>
   </header>
-  <div class="scopebar">
-    <span class="chip"><span class="dot"></span><span id="asof">loading…</span></span>
-    <span class="chip" id="scopechip">All products · all tracked rivals</span>
-    <span class="chip">Sticker-price basis · per-unit normalization coming</span>
-  </div>
 
   <div class="tiles" id="tiles"></div>
 
-  <div class="tabs" role="tablist">
-    <button class="tab on" data-tab="battlecard">Battlecard</button>
-    <button class="tab" data-tab="ourreviews">Our reviews</button>
-    <button class="tab" data-tab="rivalreviews">Rival reviews</button>
+  <div class="selbar">
+    <div class="selhead">
+      <span class="t">Competitors</span>
+      <span class="actions">
+        <button class="linkbtn" id="selall">Select all</button>
+        <button class="linkbtn" id="selclear">Clear</button>
+        <button class="addbtn" id="addbtn">+ Add competitor</button>
+      </span>
+    </div>
+    <div class="chips" id="brandchips"></div>
   </div>
-  <div class="panel" id="panel"><div class="skel">Loading…</div></div>
-  <p class="note">Every number is from the latest scrape snapshot (date shown above). Price position = our price ÷ median rival price per matched pair.
-    Rows expand to show each rival. Reviews are the most recent captured per listing, critical first.</p>
+
+  <div class="tabs" role="tablist">
+    <button class="tab on" data-tab="pricing">Pricing</button>
+    <button class="tab" data-tab="reviews">Reviews</button>
+  </div>
+  <div class="panel"><div id="panel"><div class="skel">Loading…</div></div><div id="drill"></div></div>
 </div>
+
+<div id="modalroot"></div>
 
 <script>
 const $ = s => document.querySelector(s);
-const inr = n => n == null ? '—' : '₹' + Math.round(n).toLocaleString('en-IN');
 const esc = s => (s ?? '').toString().replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let battlecard = null;
+const inr = n => n == null ? '—' : '₹' + Math.round(n).toLocaleString('en-IN');
+const OUR = 'AreoVeda';
+let state = { tab: 'pricing', brands: [], selected: new Set(), battlecard: null, reviews: null };
 
-async function getJSON(url) {
-  const r = await fetch(url);
-  if (!r.ok) throw new Error((await r.json().catch(()=>({}))).error || r.statusText);
-  return r.json();
+async function getJSON(url, opts) {
+  const r = await fetch(url, opts);
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error || r.statusText);
+  return j;
 }
 
-function posChip(p) {
-  if (p == null) return '<span class="pos na">no price</span>';
-  const pct = Math.round((p - 1) * 100);
-  const label = pct >= 0 ? `+${pct}% vs median` : `${pct}% vs median`;
-  const cls = p >= 1.15 ? 'hi' : p >= 0.95 ? 'mid' : 'lo';
-  return `<span class="pos ${cls}">${label}</span>`;
-}
-
-function verdictFlag(r) {
-  if (r.price_position >= 1.15 && r.our_rating != null && r.best_rival_rating != null && +r.our_rating < +r.best_rival_rating)
-    return '<span class="flag risk">premium + weaker rating</span>';
-  if (r.our_rating != null && r.best_rival_rating != null && +r.our_rating > +r.best_rival_rating && r.price_position != null && r.price_position < 1)
-    return '<span class="flag win">winning on both</span>';
-  if (+r.rivals_oos > 0) return '<span class="flag oos">rival out of stock</span>';
-  return '';
-}
-
+/* ── summary + selector ── */
 async function loadSummary() {
   const s = await getJSON('/api/summary');
   $('#asof').textContent = 'Scraped ' + (s.as_of || '').slice(0, 10);
   $('#tiles').innerHTML = `
     <div class="tile"><div class="n">${s.products}</div><div class="l">products tracked</div></div>
-    <div class="tile"><div class="n">${s.pairs}</div><div class="l">matched rival pairs</div></div>
+    <div class="tile"><div class="n">${s.competitors}</div><div class="l">competitors</div></div>
     <div class="tile"><div class="n accent">${s.rivals_oos}</div><div class="l">rivals out of stock</div></div>
     <div class="tile"><div class="n">${s.our_avg_rating ?? '—'} <span class="vs">vs ${s.rival_avg_rating ?? '—'}</span></div><div class="l">our avg rating vs rivals</div></div>`;
 }
 
-async function showBattlecard() {
-  if (!battlecard) battlecard = await getJSON('/api/battlecard');
-  const rows = battlecard.map((r, i) => `
-    <tr class="prod" data-i="${i}">
-      <td><div class="pname">${esc(r.own_product)}${verdictFlag(r)}</div><div class="sub">${esc(r.own_asin)} · ${r.rivals_total} rival${r.rivals_total == 1 ? '' : 's'} tracked</div></td>
-      <td class="r">${inr(r.our_price)}</td>
-      <td class="r">${posChip(r.price_position == null ? null : +r.price_position)}</td>
-      <td class="r"><span class="stars"><b>${r.our_rating ?? '—'}★</b> <span class="vs">vs best ${r.best_rival_rating ?? '—'}★</span></span></td>
-      <td class="r">${r.rivals_cheaper > 0 ? `<span class="cheaper">${r.rivals_cheaper} cheaper</span>` : 'none cheaper'}</td>
-      <td class="r">${+r.rivals_oos > 0 ? `<span class="oostxt">${r.rivals_oos} OOS</span>` : 'all in stock'}</td>
-    </tr>
-    <tr class="rivals" data-for="${i}" hidden><td colspan="6">
-      ${r.rivals.map(v => `
-        <div style="display:flex;gap:14px;justify-content:space-between;padding:4px 0;flex-wrap:wrap">
-          <span class="rname">${esc(v.name || v.title || v.asin)}</span>
-          <span>
-            <b>${inr(v.price)}</b>
-            ${v.price != null && r.our_price != null && +v.price < +r.our_price ? '<span class="cheaper">cheaper</span>' : ''}
-            · ${v.rating ?? '—'}★ (${v.reviews == null ? '—' : (+v.reviews).toLocaleString('en-IN')})
-            ${(v.availability || '').toLowerCase().includes('in stock') ? '' : `· <span class="oostxt">${esc(v.availability || 'unavailable')}</span>`}
-          </span>
-        </div>`).join('')}
-    </td></tr>`).join('');
-  $('#panel').innerHTML = `<table>
-    <thead><tr><th>Product</th><th class="r">Our price</th><th class="r">Price position</th><th class="r">Rating</th><th class="r">Price pressure</th><th class="r">Rival stock</th></tr></thead>
-    <tbody>${rows}</tbody></table>`;
-  document.querySelectorAll('tr.prod').forEach(tr => tr.addEventListener('click', () => {
-    const d = document.querySelector(`tr.rivals[data-for="${tr.dataset.i}"]`);
-    d.hidden = !d.hidden;
+async function loadBrands() {
+  state.brands = await getJSON('/api/competitors');
+  state.selected = new Set(state.brands.map(b => b.brand));
+  renderChips();
+}
+function renderChips() {
+  $('#brandchips').innerHTML = state.brands.map(b => `
+    <span class="cchip ${state.selected.has(b.brand) ? 'on' : ''}" data-b="${esc(b.brand)}">${esc(b.brand)} <span class="ct">${b.pairs}</span></span>`).join('');
+  document.querySelectorAll('.cchip').forEach(c => c.addEventListener('click', () => {
+    const b = c.dataset.b;
+    state.selected.has(b) ? state.selected.delete(b) : state.selected.add(b);
+    renderChips(); render();
   }));
 }
+$('#selall').addEventListener('click', () => { state.selected = new Set(state.brands.map(b => b.brand)); renderChips(); render(); });
+$('#selclear').addEventListener('click', () => { state.selected = new Set(); renderChips(); render(); });
 
-async function showReviews(scope) {
-  const rows = await getJSON('/api/reviews' + (scope === 'rivals' ? '?scope=rivals' : ''));
-  $('#panel').innerHTML = `<div class="reviews">${rows.map(r => `
-    <div class="rev">
-      <div class="head"><span class="prod">${esc(r.product || r.asin)}</span>
-        <span class="st ${r.stars != null && r.stars <= 3 ? 'low' : 'high'}">${r.stars ?? '—'}★</span></div>
-      ${r.title ? `<div class="t">${esc(r.title)}</div>` : ''}
-      <div class="s">${esc(r.snippet)}</div>
-      <div class="d">${esc(r.review_date || '')}</div>
-    </div>`).join('') || '<div class="skel">No reviews captured yet.</div>'}</div>`;
+/* ── pivots ── */
+function selectedBrands() { return state.brands.map(b => b.brand).filter(b => state.selected.has(b)); }
+
+function pivotHead(cols) {
+  return `<tr><th class="rowlab">Product</th><th class="ours">${OUR}</th>${cols.map(b => `<th>${esc(b)}</th>`).join('')}</tr>`;
 }
 
-document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', async () => {
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
-  b.classList.add('on');
-  $('#panel').innerHTML = '<div class="skel">Loading…</div>';
-  try {
-    if (b.dataset.tab === 'battlecard') await showBattlecard();
-    else await showReviews(b.dataset.tab === 'rivalreviews' ? 'rivals' : 'own');
-  } catch (e) { $('#panel').innerHTML = `<div class="err">${esc(e.message)}</div>`; }
-}));
+function renderPricing() {
+  const cols = selectedBrands();
+  const rows = state.battlecard.map(p => {
+    const byBrand = {};
+    for (const r of p.rivals) (byBrand[r.brand] ||= []).push(r);
+    const cells = cols.map(b => {
+      const rs = byBrand[b];
+      if (!rs) return `<td class="empty">—</td>`;
+      return `<td>` + rs.map(r => {
+        if (r.pending) return `<span class="pendb">scrape queued</span>`;
+        const cls = r.price != null && p.our_price != null ? (+r.price < +p.our_price ? 'cheaper' : 'pricier') : '';
+        const oos = (r.availability || '').toLowerCase().includes('in stock') ? '' : '<span class="oosb">OOS</span>';
+        return `<span class="${cls}">${inr(r.price)}</span>${oos}`;
+      }).join('<br>') + `</td>`;
+    }).join('');
+    return `<tr><td class="rowlab">${esc(p.own_product)}</td><td class="ours">${inr(p.our_price)}</td>${cells}</tr>`;
+  }).join('');
+  $('#panel').innerHTML = `<table><thead>${pivotHead(cols)}</thead><tbody>${rows}</tbody></table>`;
+  $('#drill').innerHTML = '';
+}
 
+function starCell(rating, count, extra = '') {
+  if (rating == null) return `<td class="empty">—</td>`;
+  const cls = +rating >= 4.3 ? 'high' : +rating < 4 ? 'low' : '';
+  return `<td${extra}><span class="cellstars ${cls}">${rating}★</span><span class="sub">${count == null ? '' : (+count).toLocaleString('en-IN') + ' ratings'}</span></td>`;
+}
+
+function renderReviews() {
+  const cols = selectedBrands();
+  const rows = state.battlecard.map(p => {
+    const byBrand = {};
+    for (const r of p.rivals) (byBrand[r.brand] ||= []).push(r);
+    const cells = cols.map(b => {
+      const rs = byBrand[b];
+      if (!rs) return `<td class="empty">—</td>`;
+      const r = rs[0];
+      if (r.pending) return `<td><span class="pendb">scrape queued</span></td>`;
+      return starCell(r.rating, r.reviews, ` data-asin="${esc(r.asin)}" data-label="${esc(b)} — vs ${esc(p.own_product)}" style="cursor:pointer"`);
+    }).join('');
+    return `<tr><td class="rowlab">${esc(p.own_product)}</td>${starCell(p.our_rating, p.our_reviews, ` class="ours" data-asin="${esc(p.own_asin)}" data-label="${OUR} — ${esc(p.own_product)}" style="cursor:pointer"`).replace('<td ', '<td class="ours" ')}${cells}</tr>`;
+  }).join('');
+  $('#panel').innerHTML = `<table><thead>${pivotHead(cols)}</thead><tbody>${rows}</tbody></table>`;
+  $('#drill').innerHTML = '<div class="drill" style="border-top:none;padding:10px 16px;color:var(--ink-4);font-size:12.5px">Click any rating to read that listing\'s recent reviews.</div>';
+  document.querySelectorAll('td[data-asin]').forEach(td => td.addEventListener('click', () => showDrill(td.dataset.asin, td.dataset.label)));
+}
+
+function showDrill(asin, label) {
+  const revs = (state.reviews || []).filter(r => r.asin === asin);
+  $('#drill').innerHTML = `<div class="drill">
+    <button class="linkbtn close" onclick="document.getElementById('drill').innerHTML=''">close</button>
+    <h3>${esc(label)} · ${revs.length} recent review${revs.length === 1 ? '' : 's'} captured</h3>
+    <div class="revgrid">${revs.map(r => `
+      <div class="rev">
+        <div class="head"><span class="t">${esc(r.title || '')}</span>
+          <span class="st ${r.stars != null && r.stars <= 3 ? 'low' : 'high'}">${r.stars ?? '—'}★</span></div>
+        <div class="s">${esc(r.snippet)}</div>
+        <div class="d">${esc(r.review_date || '')}</div>
+      </div>`).join('') || '<div class="skel">No reviews captured for this listing yet.</div>'}
+    </div></div>`;
+}
+
+/* ── add competitor modal ── */
+$('#addbtn').addEventListener('click', () => {
+  const prods = state.battlecard ? state.battlecard.map(p => p.own_product) : [];
+  $('#modalroot').innerHTML = `<div class="overlay" id="ov">
+    <div class="modal">
+      <h2>Add competitor</h2>
+      <p class="hint">Saved immediately; price &amp; review data appears after the next scrape run.</p>
+      <div class="field"><label>Brand</label><input id="f_brand" placeholder="e.g. Mamaearth"></div>
+      <div class="field"><label>Competitor product name (optional)</label><input id="f_name" placeholder="e.g. Mamaearth Baby Lotion 200ml"></div>
+      <div class="field"><label>Amazon ASIN</label><input id="f_asin" placeholder="B0XXXXXXXX" maxlength="10" style="text-transform:uppercase"></div>
+      <div class="field"><label>Competes with (our product)</label>
+        <select id="f_own">${prods.map(p => `<option>${esc(p)}</option>`).join('')}</select></div>
+      <div class="merr" id="merr"></div>
+      <div class="row">
+        <button class="btn2" id="mcancel">Cancel</button>
+        <button class="addbtn" id="msave">Add &amp; queue scrape</button>
+      </div>
+    </div></div>`;
+  $('#mcancel').addEventListener('click', () => $('#modalroot').innerHTML = '');
+  $('#ov').addEventListener('click', e => { if (e.target.id === 'ov') $('#modalroot').innerHTML = ''; });
+  $('#msave').addEventListener('click', async () => {
+    try {
+      await getJSON('/api/competitors', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ brand: $('#f_brand').value.trim(), product_name: $('#f_name').value.trim(),
+          asin: $('#f_asin').value.trim().toUpperCase(), own_product: $('#f_own').value }) });
+      $('#modalroot').innerHTML = '';
+      toast('Competitor added — scrape queued');
+      await Promise.all([loadBrands(), loadData()]);
+      render();
+    } catch (e) { $('#merr').textContent = e.message; }
+  });
+});
+function toast(msg) {
+  const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg;
+  document.body.appendChild(t); setTimeout(() => t.remove(), 3500);
+}
+
+/* ── boot ── */
+async function loadData() {
+  [state.battlecard, state.reviews] = await Promise.all([getJSON('/api/battlecard'), getJSON('/api/reviews')]);
+}
+function render() {
+  if (!state.battlecard) return;
+  state.tab === 'pricing' ? renderPricing() : renderReviews();
+}
+document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
+  b.classList.add('on'); state.tab = b.dataset.tab; render();
+}));
 (async () => {
-  try { await loadSummary(); await showBattlecard(); }
+  try { await Promise.all([loadSummary(), loadBrands(), loadData()]); render(); }
   catch (e) { $('#panel').innerHTML = `<div class="err">${esc(e.message)}</div>`; }
 })();
 </script>

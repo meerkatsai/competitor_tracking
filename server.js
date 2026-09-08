@@ -2,6 +2,7 @@ import express from 'express';
 import pg from 'pg';
 
 const app = express();
+app.use(express.json());
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false },
@@ -15,11 +16,35 @@ app.get('/api/summary', async (_req, res) => {
     const [s] = await q(`
       SELECT (SELECT max(snapshot_date) FROM listing_snapshots) AS as_of,
              (SELECT count(DISTINCT own_product) FROM matched_sku_map) AS products,
-             (SELECT count(*) FROM matched_sku_map) AS pairs,
+             (SELECT count(DISTINCT rival_brand) FROM matched_sku_map) AS competitors,
              (SELECT count(*) FROM listing_snapshots WHERE NOT is_own AND availability NOT ILIKE '%in stock%') AS rivals_oos,
              (SELECT round(avg(rating),2) FROM listing_snapshots WHERE is_own AND rating IS NOT NULL) AS our_avg_rating,
              (SELECT round(avg(rating),2) FROM listing_snapshots WHERE NOT is_own AND rating IS NOT NULL) AS rival_avg_rating`);
     res.json(s);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/competitors', async (_req, res) => {
+  try {
+    res.json(await q(`
+      SELECT rival_brand AS brand, count(*) AS pairs
+      FROM matched_sku_map GROUP BY 1 ORDER BY count(*) DESC, 1`));
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// Add a competitor product to track. Inserts the pair; the scrape pipeline picks
+// new pairs up on its next run (wiring the trigger itself is a dev-side job).
+app.post('/api/competitors', async (req, res) => {
+  try {
+    const { brand, product_name, asin, own_product } = req.body || {};
+    if (!brand || !asin || !own_product) return res.status(400).json({ error: 'brand, asin and own_product are required' });
+    if (!/^B[0-9A-Z]{9}$/.test(asin)) return res.status(400).json({ error: 'that does not look like an ASIN (B + 9 chars)' });
+    await q(`
+      INSERT INTO matched_sku_map (own_product, own_asin, rival_name, rival_asin, rival_brand, matching_confidence)
+      SELECT $1, (SELECT own_asin FROM matched_sku_map WHERE own_product = $1 LIMIT 1), $2, $3, $4, 'pending_scrape'
+      ON CONFLICT (own_product, rival_asin) DO NOTHING`,
+      [own_product, product_name || brand, asin, brand]);
+    res.json({ ok: true, queued: true, note: 'pair saved — data appears after the next scrape run' });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
@@ -29,41 +54,32 @@ app.get('/api/battlecard', async (_req, res) => {
       WITH own AS (SELECT asin, title, price, mrp, rating, review_count, availability FROM listing_snapshots WHERE is_own),
            riv AS (SELECT asin, title, price, rating, review_count, availability FROM listing_snapshots WHERE NOT is_own)
       SELECT m.own_product, m.own_asin,
-             o.price AS our_price, o.mrp AS our_mrp, o.rating AS our_rating, o.review_count AS our_reviews,
-             o.availability AS our_availability,
-             round((o.price / NULLIF(percentile_cont(0.5) WITHIN GROUP (ORDER BY r.price),0))::numeric, 2) AS price_position,
-             max(r.rating) AS best_rival_rating,
-             count(*) FILTER (WHERE r.price < o.price) AS rivals_cheaper,
-             count(*) AS rivals_total,
-             count(*) FILTER (WHERE r.availability NOT ILIKE '%in stock%') AS rivals_oos,
+             o.price AS our_price, o.rating AS our_rating, o.review_count AS our_reviews, o.availability AS our_availability,
              json_agg(json_build_object(
-               'name', m.rival_name, 'asin', m.rival_asin, 'price', r.price,
-               'rating', r.rating, 'reviews', r.review_count, 'availability', r.availability,
-               'title', r.title
-             ) ORDER BY r.price NULLS LAST) AS rivals
+               'brand', m.rival_brand, 'name', m.rival_name, 'asin', m.rival_asin,
+               'price', r.price, 'rating', r.rating, 'reviews', r.review_count,
+               'availability', r.availability, 'pending', (r.asin IS NULL)
+             ) ORDER BY m.rival_brand) AS rivals
       FROM matched_sku_map m
-      JOIN own o ON o.asin = m.own_asin
-      JOIN riv r ON r.asin = m.rival_asin
-      GROUP BY m.own_product, m.own_asin, o.price, o.mrp, o.rating, o.review_count, o.availability
-      ORDER BY price_position DESC NULLS LAST`);
+      LEFT JOIN own o ON o.asin = m.own_asin
+      LEFT JOIN riv r ON r.asin = m.rival_asin
+      GROUP BY m.own_product, m.own_asin, o.price, o.rating, o.review_count, o.availability
+      ORDER BY m.own_product`);
     res.json(rows);
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-app.get('/api/reviews', async (req, res) => {
+app.get('/api/reviews', async (_req, res) => {
   try {
-    const own = req.query.scope !== 'rivals';
-    const rows = await q(`
-      SELECT r.asin, r.stars, r.title, r.snippet, r.review_date,
-             coalesce(m.own_product, m2.rival_name, s.title) AS product
+    res.json(await q(`
+      SELECT r.asin, r.is_own, r.stars, r.title, r.snippet, r.review_date,
+             coalesce(mo.own_product, mr.rival_name)  AS product,
+             coalesce('AreoVeda', mr.rival_brand)     AS brand_label,
+             CASE WHEN r.is_own THEN 'AreoVeda' ELSE mr.rival_brand END AS brand
       FROM listing_reviews r
-      LEFT JOIN listing_snapshots s ON s.asin = r.asin AND s.is_own = r.is_own
-      LEFT JOIN LATERAL (SELECT own_product FROM matched_sku_map WHERE own_asin = r.asin LIMIT 1) m ON $1
-      LEFT JOIN LATERAL (SELECT rival_name FROM matched_sku_map WHERE rival_asin = r.asin LIMIT 1) m2 ON NOT $1
-      WHERE r.is_own = $1
-      ORDER BY (r.stars IS NOT NULL AND r.stars <= 3) DESC, r.fetched_at DESC, r.id DESC
-      LIMIT 80`, [own]);
-    res.json(rows);
+      LEFT JOIN LATERAL (SELECT own_product FROM matched_sku_map WHERE own_asin = r.asin LIMIT 1) mo ON r.is_own
+      LEFT JOIN LATERAL (SELECT rival_name, rival_brand FROM matched_sku_map WHERE rival_asin = r.asin LIMIT 1) mr ON NOT r.is_own
+      ORDER BY (r.stars IS NOT NULL AND r.stars <= 3) DESC, r.fetched_at DESC, r.id DESC`));
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
