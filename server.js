@@ -69,6 +69,31 @@ app.get('/api/battlecard', async (_req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+app.get('/api/review_summaries', async (_req, res) => {
+  try {
+    res.json(await q('SELECT asin, is_own, summary, pros, cons, themes, based_on FROM listing_review_summary'));
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/reviews.csv', async (_req, res) => {
+  try {
+    const rows = await q(`
+      SELECT CASE WHEN r.is_own THEN 'AreoVeda' ELSE mr.rival_brand END AS brand,
+             coalesce(mo.own_product, mr.rival_name) AS product,
+             r.asin, r.is_own, r.stars, r.title, r.snippet, r.review_date
+      FROM listing_reviews r
+      LEFT JOIN LATERAL (SELECT own_product FROM matched_sku_map WHERE own_asin = r.asin LIMIT 1) mo ON r.is_own
+      LEFT JOIN LATERAL (SELECT rival_name, rival_brand FROM matched_sku_map WHERE rival_asin = r.asin LIMIT 1) mr ON NOT r.is_own
+      ORDER BY r.is_own DESC, brand, product, r.stars`);
+    const cell = v => v == null ? '' : '"' + String(v).replace(/"/g, '""').replace(/\r?\n/g, ' ') + '"';
+    const csv = ['brand,product,asin,is_own,stars,title,review,date',
+      ...rows.map(r => [r.brand, r.product, r.asin, r.is_own, r.stars, r.title, r.snippet, r.review_date].map(cell).join(','))].join('\n');
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename="areoveda_competitor_reviews.csv"');
+    res.send('\ufeff' + csv);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 app.get('/api/reviews', async (_req, res) => {
   try {
     res.json(await q(`

@@ -16,6 +16,7 @@
     --font-ui:"Inter",system-ui,-apple-system,sans-serif;
   }
   *{box-sizing:border-box}
+  [hidden]{display:none!important}
   body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-ui);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
   .wrap{max-width:1080px;margin:0 auto;padding:28px 28px 72px}
 
@@ -87,6 +88,28 @@
   .revlink{font-size:12.5px;color:var(--accent-2);cursor:pointer;font-weight:500}
   .revlink:hover{text-decoration:underline}
 
+  /* review summary blocks (AI-generated, Amazon-style) */
+  tr.sumrow td{background:var(--bg-2);border-bottom:1px solid var(--line-2);padding:12px 16px 14px;text-align:left;white-space:normal}
+  tr.sumrow.oursum td{background:var(--accent-tint);border-bottom:1px solid var(--accent-soft)}
+  .sum .stext{font-size:13px;color:var(--ink-2);margin-bottom:8px;max-width:78ch}
+  .pcwrap{display:flex;gap:24px;flex-wrap:wrap;margin-bottom:8px}
+  .pc{font-size:12.5px}
+  .pc .h{font-weight:600;color:var(--ink-2);margin-bottom:3px}
+  .pc ul{margin:0;padding:0;list-style:none}
+  .pc li{padding:1px 0;color:var(--ink-2)}
+  .pc.pros li::before{content:"✓ ";color:var(--good);font-weight:700}
+  .pc.cons li::before{content:"✕ ";color:var(--bad);font-weight:700}
+  .themes{display:flex;flex-wrap:wrap;gap:6px}
+  .theme{font-size:11.5px;font-weight:500;border-radius:999px;padding:2.5px 10px;border:1px solid var(--line)}
+  .theme.positive{background:var(--good-bg);color:var(--good);border-color:#bbe3c8}
+  .theme.negative{background:var(--bad-bg);color:var(--bad);border-color:#f3c4c4}
+  .theme.mixed{background:var(--warn-bg);color:var(--warn);border-color:#e8d9a0}
+  .ailabel{font-size:11px;color:var(--ink-4);margin-top:8px}
+  .dlbtn{display:inline-flex;align-items:center;gap:6px;background:var(--bg);border:1px solid var(--line);border-radius:8px;font:inherit;font-size:12.5px;font-weight:500;color:var(--ink-2);padding:6px 12px;cursor:pointer;text-decoration:none;margin-left:auto}
+  .dlbtn:hover{border-color:var(--accent);color:var(--accent-2)}
+  .tabbar{display:flex;align-items:center;border-bottom:1px solid var(--line)}
+  .tabbar .tabs{border-bottom:none;flex:1}
+
   .drill{border-top:1px solid var(--line-2);background:var(--bg-2);padding:16px}
   .drill h3{margin:0 0 10px;font-size:13px;font-weight:600;color:var(--ink-2)}
   .drill .close{float:right}
@@ -123,8 +146,6 @@
     <span class="asof"><span class="dot"></span><span id="asof">loading…</span></span>
   </header>
 
-  <div class="tiles" id="tiles"></div>
-
   <div class="controls">
     <div class="ctl">
       <label>Product</label>
@@ -146,9 +167,12 @@
     <button class="addbtn" id="addbtn">+ Add competitor</button>
   </div>
 
-  <div class="tabs" role="tablist">
-    <button class="tab on" data-tab="pricing">Pricing</button>
-    <button class="tab" data-tab="reviews">Reviews</button>
+  <div class="tabbar">
+    <div class="tabs" role="tablist">
+      <button class="tab on" data-tab="pricing">Pricing</button>
+      <button class="tab" data-tab="reviews">Reviews</button>
+    </div>
+    <a class="dlbtn" href="/api/reviews.csv" download hidden id="dlreviews">⬇ Download all reviews (CSV)</a>
   </div>
   <div class="panel"><div id="panel"><div class="skel">Loading…</div></div><div id="drill"></div></div>
 </div>
@@ -162,7 +186,7 @@ const inr = n => n == null ? '—' : '₹' + Math.round(n).toLocaleString('en-IN
 const OUR = 'AreoVeda';
 const amz = a => `https://www.amazon.in/dp/${encodeURIComponent(a)}`;
 const who = (brand, name, asin, img) => `<div class="who">${img ? `<img src="${esc(img)}" alt="" loading="lazy">` : '<span class="noimg"></span>'}<span><span class="b"><a href="${amz(asin)}" target="_blank" rel="noopener">${esc(brand)}</a></span>${name ? `<span class="p">${esc(name)}</span>` : ''}</span></div>`;
-let state = { tab: 'pricing', product: '', brands: [], selected: new Set(), battlecard: null, reviews: null };
+let state = { tab: 'pricing', product: '', brands: [], selected: new Set(), battlecard: null, reviews: null, summaries: {} };
 
 async function getJSON(url, opts) {
   const r = await fetch(url, opts);
@@ -175,11 +199,6 @@ async function getJSON(url, opts) {
 async function loadSummary() {
   const s = await getJSON('/api/summary');
   $('#asof').textContent = 'Scraped ' + (s.as_of || '').slice(0, 10);
-  $('#tiles').innerHTML = `
-    <div class="tile"><div class="n">${s.products}</div><div class="l">products tracked</div></div>
-    <div class="tile"><div class="n">${s.competitors}</div><div class="l">competitors</div></div>
-    <div class="tile"><div class="n accent">${s.rivals_oos}</div><div class="l">rivals out of stock</div></div>
-    <div class="tile"><div class="n">${s.our_avg_rating ?? '—'} <span class="vs">vs ${s.rival_avg_rating ?? '—'}</span></div><div class="l">our avg rating vs rivals</div></div>`;
 }
 
 /* ── dropdowns ── */
@@ -264,23 +283,43 @@ function renderPricing() {
   $('#drill').innerHTML = '';
 }
 
+function summaryRow(asin, isOurs, revCount, label) {
+  const s = state.summaries[asin];
+  const cls = isOurs ? 'sumrow oursum' : 'sumrow';
+  if (!s) return `<tr class="${cls}"><td colspan="5"><div class="sum"><span class="ailabel">AI review summary pending — appears after the next analysis run.</span></div></td></tr>`;
+  const pros = (s.pros || []), cons = (s.cons || []), themes = (s.themes || []);
+  return `<tr class="${cls}"><td colspan="5"><div class="sum">
+    <div class="stext">${esc(s.summary || '')}</div>
+    <div class="pcwrap">
+      ${pros.length ? `<div class="pc pros"><div class="h">Pros</div><ul>${pros.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>` : ''}
+      ${cons.length ? `<div class="pc cons"><div class="h">Cons</div><ul>${cons.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>` : ''}
+    </div>
+    ${themes.length ? `<div class="themes">${themes.map(t => `<span class="theme ${esc((t.sentiment || 'mixed').toLowerCase())}">${esc(t.label)}</span>`).join('')}</div>` : ''}
+    <div class="ailabel">AI-generated from the ${s.based_on} captured review${s.based_on == 1 ? '' : 's'} · <span class="revlink" data-asin="${esc(asin)}" data-label="${esc(label)}">see all captured reviews</span></div>
+  </div></td></tr>`;
+}
+
 function renderReviews() {
   const prods = visibleProducts();
   let body = '';
   for (const p of prods) {
     const rs = rivalsOf(p).slice().sort((a, b) => (b.rating ?? -1) - (a.rating ?? -1));
     if (prods.length > 1) body += `<tr class="group"><td colspan="5">${esc(p.own_product)}</td></tr>`;
-    body += `<tr class="ours"><td>${who(OUR + ' — ' + p.own_product, '', p.own_asin, p.our_image)}</td>
+    const ourLabel = OUR + ' — ' + p.own_product;
+    body += `<tr class="ours"><td>${who(ourLabel, '', p.own_asin, p.our_image)}</td>
       <td>${p.our_rating ?? '—'}★</td><td><span class="muted">reference</span></td>
       <td>${p.our_reviews == null ? '—' : (+p.our_reviews).toLocaleString('en-IN')}</td>
-      <td><span class="revlink" data-asin="${esc(p.own_asin)}" data-label="${OUR} — ${esc(p.own_product)}">read reviews</span></td></tr>`;
+      <td><span class="revlink" data-asin="${esc(p.own_asin)}" data-label="${esc(ourLabel)}">view all</span></td></tr>`;
+    body += summaryRow(p.own_asin, true, p.our_reviews, ourLabel);
     if (!rs.length) body += `<tr class="rival"><td colspan="5" class="muted">no selected competitors matched to this product</td></tr>`;
     for (const r of rs) {
+      const rLabel = r.brand + ' — vs ' + p.own_product;
       body += `<tr class="rival"><td>${who(r.brand, r.name, r.asin, r.image)}</td>
         <td>${r.pending ? '<span class="pendb">scrape queued</span>' : (r.rating ?? '—') + '★'}</td>
         <td>${r.pending ? '<span class="muted">—</span>' : ratingDelta(p.our_rating, r.rating)}</td>
         <td>${r.reviews == null ? '—' : (+r.reviews).toLocaleString('en-IN')}</td>
-        <td>${r.pending ? '' : `<span class="revlink" data-asin="${esc(r.asin)}" data-label="${esc(r.brand)} — vs ${esc(p.own_product)}">read reviews</span>`}</td></tr>`;
+        <td>${r.pending ? '' : `<span class="revlink" data-asin="${esc(r.asin)}" data-label="${esc(rLabel)}">view all</span>`}</td></tr>`;
+      if (!r.pending) body += summaryRow(r.asin, false, r.reviews, rLabel);
     }
   }
   $('#panel').innerHTML = `<table>
@@ -292,18 +331,22 @@ function renderReviews() {
 
 function showDrill(asin, label) {
   const revs = (state.reviews || []).filter(r => r.asin === asin);
-  $('#drill').innerHTML = `<div class="drill">
-    <button class="linkbtn close" onclick="document.getElementById('drill').innerHTML=''">close</button>
-    <h3>${esc(label)} · ${revs.length} recent review${revs.length === 1 ? '' : 's'} captured</h3>
-    <div class="revgrid">${revs.map(r => `
-      <div class="rev">
-        <div class="head"><span class="t">${esc(r.title || '')}</span>
-          <span class="st ${r.stars != null && r.stars <= 3 ? 'low' : 'high'}">${r.stars ?? '—'}★</span></div>
-        <div class="s">${esc(r.snippet)}</div>
-        <div class="d">${esc(r.review_date || '')}</div>
-      </div>`).join('') || '<div class="skel">No reviews captured for this listing yet.</div>'}
+  $('#modalroot').innerHTML = `<div class="overlay" id="revov">
+    <div class="modal" style="width:min(760px,94vw);max-height:82vh;overflow-y:auto">
+      <button class="linkbtn" style="float:right" id="revclose">close</button>
+      <h2 style="margin-bottom:12px">${esc(label)}</h2>
+      <p class="hint">${revs.length} captured review${revs.length === 1 ? '' : 's'} — the full history is in the CSV download.</p>
+      <div class="revgrid">${revs.map(r => `
+        <div class="rev">
+          <div class="head"><span class="t">${esc(r.title || '')}</span>
+            <span class="st ${r.stars != null && r.stars <= 3 ? 'low' : 'high'}">${r.stars ?? '—'}★</span></div>
+          <div class="s">${esc(r.snippet)}</div>
+          <div class="d">${esc(r.review_date || '')}</div>
+        </div>`).join('') || '<div class="skel">No reviews captured for this listing yet.</div>'}
+      </div>
     </div></div>`;
-  $('#drill').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  $('#revclose').addEventListener('click', () => $('#modalroot').innerHTML = '');
+  $('#revov').addEventListener('click', e => { if (e.target.id === 'revov') $('#modalroot').innerHTML = ''; });
 }
 
 /* ── add competitor ── */
@@ -317,7 +360,7 @@ $('#addbtn').addEventListener('click', () => {
       <div class="field"><label>Competitor product name (optional)</label><input id="f_name" placeholder="e.g. Mamaearth Baby Lotion 200ml"></div>
       <div class="field"><label>Amazon ASIN</label><input id="f_asin" placeholder="B0XXXXXXXX" maxlength="10" style="text-transform:uppercase"></div>
       <div class="field"><label>Competes with (our product)</label>
-        <select id="f_own">${prods.map(p => `<option>${esc(p)}</option>`).join('')}</select></div>
+        <select id="f_own">${prods.map(p => `<option ${p === state.product ? 'selected' : ''}>${esc(p)}</option>`).join('')}</select></div>
       <div class="merr" id="merr"></div>
       <div class="row">
         <button class="btn2" id="mcancel">Cancel</button>
@@ -345,7 +388,11 @@ function toast(msg) {
 
 /* ── boot ── */
 async function loadData() {
-  [state.battlecard, state.reviews] = await Promise.all([getJSON('/api/battlecard'), getJSON('/api/reviews')]);
+  let sums;
+  [state.battlecard, state.reviews, sums] = await Promise.all([
+    getJSON('/api/battlecard'), getJSON('/api/reviews'),
+    getJSON('/api/review_summaries').catch(() => [])]);
+  state.summaries = Object.fromEntries((sums || []).map(s => [s.asin, s]));
 }
 function render() {
   if (!state.battlecard) return;
@@ -353,7 +400,9 @@ function render() {
 }
 document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () => {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
-  b.classList.add('on'); state.tab = b.dataset.tab; render();
+  b.classList.add('on'); state.tab = b.dataset.tab;
+  $('#dlreviews').hidden = state.tab !== 'reviews';
+  render();
 }));
 (async () => {
   try { await Promise.all([loadSummary(), loadBrands(), loadData()]); fillProducts(); render(); }
