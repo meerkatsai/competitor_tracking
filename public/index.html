@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Competitor Tracking — AreoVeda</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<style>
+  :root {
+    --bg:#faf9f7; --card:#ffffff; --ink:#1c1917; --ink-2:#57534e; --ink-3:#a8a29e;
+    --line:#e7e5e4; --line-soft:#f5f5f4;
+    --accent:#ea580c; --accent-soft:#fff7ed;
+    --good:#15803d; --good-bg:#f0fdf4; --bad:#b91c1c; --bad-bg:#fef2f2; --warn:#a16207; --warn-bg:#fefce8;
+    --mono:ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1120px;margin:0 auto;padding:28px 24px 64px}
+
+  header{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:4px}
+  h1{font-size:22px;font-weight:700;letter-spacing:-.02em;margin:0}
+  .ws{color:var(--ink-3);font-size:13px}
+  .scopebar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0 24px;color:var(--ink-2);font-size:13px}
+  .chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:3px 12px;font-size:12.5px;color:var(--ink-2)}
+  .chip .dot{width:7px;height:7px;border-radius:50%;background:var(--good)}
+
+  .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:28px}
+  .tile{background:var(--card);padding:16px 18px}
+  .tile .n{font-size:24px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+  .tile .l{font-size:12px;color:var(--ink-3);margin-top:2px}
+  .tile .n.accent{color:var(--accent)}
+
+  .tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-bottom:0}
+  .tab{background:none;border:none;border-bottom:2px solid transparent;font:inherit;font-size:14px;font-weight:500;color:var(--ink-2);padding:9px 14px;cursor:pointer}
+  .tab.on{color:var(--ink);font-weight:600;border-bottom-color:var(--accent)}
+  .tab:hover{color:var(--ink)}
+
+  .panel{background:var(--card);border:1px solid var(--line);border-top:none;border-radius:0 0 12px 12px;overflow-x:auto}
+  table{border-collapse:collapse;width:100%;min-width:820px;font-variant-numeric:tabular-nums}
+  th{text-align:left;font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3);padding:12px 14px;border-bottom:1px solid var(--line);white-space:nowrap}
+  th.r,td.r{text-align:right}
+  td{padding:11px 14px;border-bottom:1px solid var(--line-soft);vertical-align:middle}
+  tbody tr.prod{cursor:pointer}
+  tbody tr.prod:hover td{background:var(--accent-soft)}
+  .pname{font-weight:600}
+  .sub{color:var(--ink-3);font-size:12px}
+
+  .pos{display:inline-block;font-weight:600;font-size:12.5px;border-radius:6px;padding:2px 8px;white-space:nowrap}
+  .pos.hi{background:var(--bad-bg);color:var(--bad)}
+  .pos.mid{background:var(--warn-bg);color:var(--warn)}
+  .pos.lo{background:var(--good-bg);color:var(--good)}
+  .pos.na{background:var(--line-soft);color:var(--ink-3)}
+  .stars{white-space:nowrap}
+  .stars b{font-weight:600}
+  .vs{color:var(--ink-3);font-size:12px}
+  .flag{display:inline-block;font-size:11.5px;font-weight:600;border-radius:6px;padding:2px 8px;margin-left:6px}
+  .flag.oos{background:var(--warn-bg);color:var(--warn)}
+  .flag.risk{background:var(--bad-bg);color:var(--bad)}
+  .flag.win{background:var(--good-bg);color:var(--good)}
+
+  .rivals td{background:var(--bg);padding:8px 14px 8px 34px;border-bottom:1px solid var(--line-soft);font-size:13px}
+  .rivals .rname{color:var(--ink-2)}
+  .cheaper{color:var(--bad);font-weight:600}
+  .oostxt{color:var(--warn);font-weight:600}
+
+  .reviews{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px;padding:16px}
+  .rev{border:1px solid var(--line);border-radius:10px;background:var(--card);padding:14px 16px}
+  .rev .head{display:flex;justify-content:space-between;gap:8px;margin-bottom:6px;align-items:baseline}
+  .rev .prod{font-size:12px;color:var(--accent);font-weight:600}
+  .rev .st{font-size:12.5px;font-weight:700;white-space:nowrap}
+  .rev .st.low{color:var(--bad)} .rev .st.high{color:var(--good)}
+  .rev .t{font-weight:600;font-size:13px;margin-bottom:3px}
+  .rev .s{color:var(--ink-2);font-size:13px}
+  .rev .d{color:var(--ink-3);font-size:11.5px;margin-top:8px}
+
+  .note{color:var(--ink-3);font-size:12.5px;margin-top:14px}
+  .err{background:var(--bad-bg);color:var(--bad);border-radius:10px;padding:14px 16px;margin:16px 0}
+  .skel{color:var(--ink-3);padding:24px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Competitor Tracking</h1>
+    <span class="ws">AreoVeda · Amazon India</span>
+  </header>
+  <div class="scopebar">
+    <span class="chip"><span class="dot"></span><span id="asof">loading…</span></span>
+    <span class="chip" id="scopechip">All products · all tracked rivals</span>
+    <span class="chip">Sticker-price basis · per-unit normalization coming</span>
+  </div>
+
+  <div class="tiles" id="tiles"></div>
+
+  <div class="tabs" role="tablist">
+    <button class="tab on" data-tab="battlecard">Battlecard</button>
+    <button class="tab" data-tab="ourreviews">Our reviews</button>
+    <button class="tab" data-tab="rivalreviews">Rival reviews</button>
+  </div>
+  <div class="panel" id="panel"><div class="skel">Loading…</div></div>
+  <p class="note">Every number is from the latest scrape snapshot (date shown above). Price position = our price ÷ median rival price per matched pair.
+    Rows expand to show each rival. Reviews are the most recent captured per listing, critical first.</p>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const inr = n => n == null ? '—' : '₹' + Math.round(n).toLocaleString('en-IN');
+const esc = s => (s ?? '').toString().replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let battlecard = null;
+
+async function getJSON(url) {
+  const r = await fetch(url);
+  if (!r.ok) throw new Error((await r.json().catch(()=>({}))).error || r.statusText);
+  return r.json();
+}
+
+function posChip(p) {
+  if (p == null) return '<span class="pos na">no price</span>';
+  const pct = Math.round((p - 1) * 100);
+  const label = pct >= 0 ? `+${pct}% vs median` : `${pct}% vs median`;
+  const cls = p >= 1.15 ? 'hi' : p >= 0.95 ? 'mid' : 'lo';
+  return `<span class="pos ${cls}">${label}</span>`;
+}
+
+function verdictFlag(r) {
+  if (r.price_position >= 1.15 && r.our_rating != null && r.best_rival_rating != null && +r.our_rating < +r.best_rival_rating)
+    return '<span class="flag risk">premium + weaker rating</span>';
+  if (r.our_rating != null && r.best_rival_rating != null && +r.our_rating > +r.best_rival_rating && r.price_position != null && r.price_position < 1)
+    return '<span class="flag win">winning on both</span>';
+  if (+r.rivals_oos > 0) return '<span class="flag oos">rival out of stock</span>';
+  return '';
+}
+
+async function loadSummary() {
+  const s = await getJSON('/api/summary');
+  $('#asof').textContent = 'Scraped ' + (s.as_of || '').slice(0, 10);
+  $('#tiles').innerHTML = `
+    <div class="tile"><div class="n">${s.products}</div><div class="l">products tracked</div></div>
+    <div class="tile"><div class="n">${s.pairs}</div><div class="l">matched rival pairs</div></div>
+    <div class="tile"><div class="n accent">${s.rivals_oos}</div><div class="l">rivals out of stock</div></div>
+    <div class="tile"><div class="n">${s.our_avg_rating ?? '—'} <span class="vs">vs ${s.rival_avg_rating ?? '—'}</span></div><div class="l">our avg rating vs rivals</div></div>`;
+}
+
+async function showBattlecard() {
+  if (!battlecard) battlecard = await getJSON('/api/battlecard');
+  const rows = battlecard.map((r, i) => `
+    <tr class="prod" data-i="${i}">
+      <td><div class="pname">${esc(r.own_product)}${verdictFlag(r)}</div><div class="sub">${esc(r.own_asin)} · ${r.rivals_total} rival${r.rivals_total == 1 ? '' : 's'} tracked</div></td>
+      <td class="r">${inr(r.our_price)}</td>
+      <td class="r">${posChip(r.price_position == null ? null : +r.price_position)}</td>
+      <td class="r"><span class="stars"><b>${r.our_rating ?? '—'}★</b> <span class="vs">vs best ${r.best_rival_rating ?? '—'}★</span></span></td>
+      <td class="r">${r.rivals_cheaper > 0 ? `<span class="cheaper">${r.rivals_cheaper} cheaper</span>` : 'none cheaper'}</td>
+      <td class="r">${+r.rivals_oos > 0 ? `<span class="oostxt">${r.rivals_oos} OOS</span>` : 'all in stock'}</td>
+    </tr>
+    <tr class="rivals" data-for="${i}" hidden><td colspan="6">
+      ${r.rivals.map(v => `
+        <div style="display:flex;gap:14px;justify-content:space-between;padding:4px 0;flex-wrap:wrap">
+          <span class="rname">${esc(v.name || v.title || v.asin)}</span>
+          <span>
+            <b>${inr(v.price)}</b>
+            ${v.price != null && r.our_price != null && +v.price < +r.our_price ? '<span class="cheaper">cheaper</span>' : ''}
+            · ${v.rating ?? '—'}★ (${v.reviews == null ? '—' : (+v.reviews).toLocaleString('en-IN')})
+            ${(v.availability || '').toLowerCase().includes('in stock') ? '' : `· <span class="oostxt">${esc(v.availability || 'unavailable')}</span>`}
+          </span>
+        </div>`).join('')}
+    </td></tr>`).join('');
+  $('#panel').innerHTML = `<table>
+    <thead><tr><th>Product</th><th class="r">Our price</th><th class="r">Price position</th><th class="r">Rating</th><th class="r">Price pressure</th><th class="r">Rival stock</th></tr></thead>
+    <tbody>${rows}</tbody></table>`;
+  document.querySelectorAll('tr.prod').forEach(tr => tr.addEventListener('click', () => {
+    const d = document.querySelector(`tr.rivals[data-for="${tr.dataset.i}"]`);
+    d.hidden = !d.hidden;
+  }));
+}
+
+async function showReviews(scope) {
+  const rows = await getJSON('/api/reviews' + (scope === 'rivals' ? '?scope=rivals' : ''));
+  $('#panel').innerHTML = `<div class="reviews">${rows.map(r => `
+    <div class="rev">
+      <div class="head"><span class="prod">${esc(r.product || r.asin)}</span>
+        <span class="st ${r.stars != null && r.stars <= 3 ? 'low' : 'high'}">${r.stars ?? '—'}★</span></div>
+      ${r.title ? `<div class="t">${esc(r.title)}</div>` : ''}
+      <div class="s">${esc(r.snippet)}</div>
+      <div class="d">${esc(r.review_date || '')}</div>
+    </div>`).join('') || '<div class="skel">No reviews captured yet.</div>'}</div>`;
+}
+
+document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', async () => {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
+  b.classList.add('on');
+  $('#panel').innerHTML = '<div class="skel">Loading…</div>';
+  try {
+    if (b.dataset.tab === 'battlecard') await showBattlecard();
+    else await showReviews(b.dataset.tab === 'rivalreviews' ? 'rivals' : 'own');
+  } catch (e) { $('#panel').innerHTML = `<div class="err">${esc(e.message)}</div>`; }
+}));
+
+(async () => {
+  try { await loadSummary(); await showBattlecard(); }
+  catch (e) { $('#panel').innerHTML = `<div class="err">${esc(e.message)}</div>`; }
+})();
+</script>
+</body>
+</html>

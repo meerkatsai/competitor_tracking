@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: competitor_tracking
+    runtime: node
+    plan: starter
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: DATABASE_URL
+        sync: false
