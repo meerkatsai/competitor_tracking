@@ -51,19 +51,19 @@ app.post('/api/competitors', async (req, res) => {
 app.get('/api/battlecard', async (_req, res) => {
   try {
     const rows = await q(`
-      WITH own AS (SELECT asin, title, price, mrp, rating, review_count, availability FROM listing_snapshots WHERE is_own),
-           riv AS (SELECT asin, title, price, rating, review_count, availability FROM listing_snapshots WHERE NOT is_own)
+      WITH own AS (SELECT asin, title, price, mrp, rating, review_count, availability, image_url FROM listing_snapshots WHERE is_own),
+           riv AS (SELECT asin, title, price, rating, review_count, availability, image_url FROM listing_snapshots WHERE NOT is_own)
       SELECT m.own_product, m.own_asin,
-             o.price AS our_price, o.rating AS our_rating, o.review_count AS our_reviews, o.availability AS our_availability,
+             o.price AS our_price, o.rating AS our_rating, o.review_count AS our_reviews, o.availability AS our_availability, o.image_url AS our_image,
              json_agg(json_build_object(
                'brand', m.rival_brand, 'name', m.rival_name, 'asin', m.rival_asin,
                'price', r.price, 'rating', r.rating, 'reviews', r.review_count,
-               'availability', r.availability, 'pending', (r.asin IS NULL)
+               'availability', r.availability, 'image', r.image_url, 'pending', (r.asin IS NULL)
              ) ORDER BY m.rival_brand) AS rivals
       FROM matched_sku_map m
       LEFT JOIN own o ON o.asin = m.own_asin
       LEFT JOIN riv r ON r.asin = m.rival_asin
-      GROUP BY m.own_product, m.own_asin, o.price, o.rating, o.review_count, o.availability
+      GROUP BY m.own_product, m.own_asin, o.price, o.rating, o.review_count, o.availability, o.image_url
       ORDER BY m.own_product`);
     res.json(rows);
   } catch (e) { res.status(500).json({ error: e.message }); }

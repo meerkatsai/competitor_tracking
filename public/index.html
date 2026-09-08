@@ -16,8 +16,8 @@
     --font-ui:"Inter",system-ui,-apple-system,sans-serif;
   }
   *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-ui);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
-  .wrap{max-width:1180px;margin:0 auto;padding:28px 28px 72px}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-ui);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1080px;margin:0 auto;padding:28px 28px 72px}
 
   header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:22px}
   h1{font-size:20px;font-weight:600;letter-spacing:-.01em;margin:0}
@@ -25,27 +25,32 @@
   .asof{margin-left:auto;display:inline-flex;align-items:center;gap:7px;background:var(--bg-2);border:1px solid var(--line-2);border-radius:8px;padding:5px 12px;font-size:12.5px;color:var(--ink-2)}
   .asof .dot{width:7px;height:7px;border-radius:50%;background:var(--good)}
 
-  .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:24px}
+  .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:22px}
   .tile{background:var(--bg);border:1px solid var(--line-2);border-radius:12px;padding:16px 18px}
   .tile .n{font-size:24px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
   .tile .n.accent{color:var(--accent-2)}
   .tile .l{font-size:12px;color:var(--ink-3);margin-top:2px}
   .tile .vs{color:var(--ink-4);font-size:13px;font-weight:500}
 
-  /* competitor selector */
-  .selbar{background:var(--bg-2);border:1px solid var(--line-2);border-radius:12px;padding:14px 16px;margin-bottom:20px}
-  .selhead{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
-  .selhead .t{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
-  .selhead .actions{margin-left:auto;display:flex;gap:8px}
-  .linkbtn{background:none;border:none;font:inherit;font-size:12.5px;font-weight:500;color:var(--accent-2);cursor:pointer;padding:2px 4px}
-  .linkbtn:hover{text-decoration:underline}
-  .chips{display:flex;flex-wrap:wrap;gap:7px}
-  .cchip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:4px 12px;font-size:12.5px;font-weight:500;color:var(--ink-2);cursor:pointer;user-select:none;transition:all .12s}
-  .cchip:hover{border-color:var(--accent);color:var(--ink)}
-  .cchip.on{background:var(--accent-tint);border-color:var(--accent);color:var(--accent-2)}
-  .cchip .ct{font-size:11px;color:var(--ink-4);font-weight:400}
-  .cchip.on .ct{color:var(--accent)}
-  .addbtn{display:inline-flex;align-items:center;gap:6px;background:var(--accent);color:#fff;border:none;border-radius:8px;font:inherit;font-size:13px;font-weight:600;padding:7px 14px;cursor:pointer}
+  /* controls: dropdowns */
+  .controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:18px}
+  .ctl label{display:block;font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-4);margin-bottom:4px}
+  select.ctlsel{font:inherit;font-size:13.5px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 34px 8px 12px;min-width:220px;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236b7380' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+  select.ctlsel:focus{outline:2px solid var(--accent-soft);border-color:var(--accent)}
+
+  .msel{position:relative}
+  .msel-btn{font:inherit;font-size:13.5px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 34px 8px 12px;min-width:240px;text-align:left;cursor:pointer;background-image:url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236b7380' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+  .msel-btn:focus{outline:2px solid var(--accent-soft);border-color:var(--accent)}
+  .msel-panel{position:absolute;top:calc(100% + 6px);left:0;z-index:40;background:var(--bg);border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 30px rgb(16 24 39/.12);width:280px;max-height:340px;display:flex;flex-direction:column}
+  .msel-actions{display:flex;gap:4px;padding:8px 10px;border-bottom:1px solid var(--line-2)}
+  .msel-list{overflow-y:auto;padding:6px}
+  .msel-item{display:flex;align-items:center;gap:9px;padding:6px 8px;border-radius:7px;cursor:pointer;font-size:13px;color:var(--ink-2)}
+  .msel-item:hover{background:var(--bg-2)}
+  .msel-item input{accent-color:var(--accent);width:15px;height:15px;margin:0}
+  .msel-item .ct{margin-left:auto;font-size:11.5px;color:var(--ink-4)}
+  .linkbtn{background:none;border:none;font:inherit;font-size:12.5px;font-weight:500;color:var(--accent-2);cursor:pointer;padding:3px 8px;border-radius:6px}
+  .linkbtn:hover{background:var(--accent-tint)}
+  .addbtn{display:inline-flex;align-items:center;gap:6px;background:var(--accent);color:#fff;border:none;border-radius:8px;font:inherit;font-size:13px;font-weight:600;padding:8px 14px;cursor:pointer;margin-left:auto;align-self:flex-end}
   .addbtn:hover{background:var(--accent-2)}
 
   .tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-bottom:0}
@@ -54,28 +59,34 @@
   .tab:hover{color:var(--ink)}
 
   .panel{background:var(--bg);border:1px solid var(--line-2);border-top:none;border-radius:0 0 12px 12px;overflow-x:auto}
-  table{border-collapse:separate;border-spacing:0;width:max-content;min-width:100%;font-variant-numeric:tabular-nums}
-  th{position:sticky;top:0;background:var(--bg-2);text-align:right;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);padding:11px 14px;border-bottom:1px solid var(--line);white-space:nowrap}
-  th.rowlab{text-align:left}
-  td{padding:10px 14px;border-bottom:1px solid var(--line-3);text-align:right;white-space:nowrap}
+  table{border-collapse:separate;border-spacing:0;width:100%;min-width:760px;font-variant-numeric:tabular-nums}
+  th{background:var(--bg-2);text-align:right;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);padding:11px 16px;border-bottom:1px solid var(--line);white-space:nowrap}
+  th:first-child{text-align:left}
+  td{padding:11px 16px;border-bottom:1px solid var(--line-3);text-align:right;white-space:nowrap}
+  td:first-child{text-align:left;white-space:normal}
   tr:last-child td{border-bottom:none}
-  td.rowlab,th.rowlab{position:sticky;left:0;background:var(--bg);z-index:2;text-align:left;font-weight:500;border-right:1px solid var(--line-2);min-width:200px;max-width:260px;white-space:normal}
-  th.rowlab{background:var(--bg-2);z-index:3}
-  td.ours,th.ours{background:var(--accent-tint);font-weight:600}
-  th.ours{color:var(--accent-2)}
-  tbody tr:hover td:not(.ours){background:var(--bg-2)}
-  td .sub{display:block;font-size:11px;color:var(--ink-4);font-weight:400}
-  td.cheaper{color:var(--bad)}
-  td.pricier{color:var(--good)}
-  td.empty{color:var(--line)}
-  .oosb{display:inline-block;font-size:10.5px;font-weight:600;background:var(--warn-bg);color:var(--warn);border-radius:5px;padding:1px 6px;margin-left:5px}
+  tr.group td{background:var(--bg-3);font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2);padding:8px 16px;border-bottom:1px solid var(--line-2)}
+  tr.ours td{background:var(--accent-tint);font-weight:600;border-bottom:1px solid var(--accent-soft)}
+  tr.ours .who .b{color:var(--accent-2)}
+  tr.rival:hover td{background:var(--bg-2)}
+  .who{display:flex;align-items:center;gap:10px}
+  .who img{width:40px;height:40px;object-fit:contain;border:1px solid var(--line-2);border-radius:8px;background:#fff;flex:none}
+  .who .noimg{width:40px;height:40px;border:1px solid var(--line-2);border-radius:8px;background:var(--bg-3);flex:none}
+  .who .b{font-weight:600;display:block}
+  .who .b a{color:inherit;text-decoration:none}
+  .who .b a:hover{color:var(--accent-2);text-decoration:underline}
+  .who .p{font-size:12px;color:var(--ink-4);display:block;max-width:340px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .delta{font-weight:600}
+  .delta.neg{color:var(--bad)}      /* rival better for shopper = worse for us */
+  .delta.pos{color:var(--good)}
+  .delta.zero{color:var(--ink-4);font-weight:400}
+  .muted{color:var(--ink-4)}
+  .oosb{display:inline-block;font-size:10.5px;font-weight:600;background:var(--warn-bg);color:var(--warn);border-radius:5px;padding:1px 6px}
+  .okb{color:var(--ink-4);font-size:12px}
   .pendb{display:inline-block;font-size:10.5px;font-weight:600;background:var(--bg-3);color:var(--ink-4);border-radius:5px;padding:1px 6px}
+  .revlink{font-size:12.5px;color:var(--accent-2);cursor:pointer;font-weight:500}
+  .revlink:hover{text-decoration:underline}
 
-  .cellstars{font-weight:600}
-  .cellstars.low{color:var(--bad)}
-  .cellstars.high{color:var(--good)}
-
-  /* review drill-down */
   .drill{border-top:1px solid var(--line-2);background:var(--bg-2);padding:16px}
   .drill h3{margin:0 0 10px;font-size:13px;font-weight:600;color:var(--ink-2)}
   .drill .close{float:right}
@@ -84,11 +95,10 @@
   .rev .head{display:flex;justify-content:space-between;gap:8px;margin-bottom:4px;align-items:baseline}
   .rev .st{font-size:12.5px;font-weight:700}
   .rev .st.low{color:var(--bad)} .rev .st.high{color:var(--good)}
-  .rev .t{font-weight:600;font-size:13px;margin-bottom:2px}
+  .rev .t{font-weight:600;font-size:13px}
   .rev .s{color:var(--ink-2);font-size:12.5px}
   .rev .d{color:var(--ink-4);font-size:11px;margin-top:6px}
 
-  /* modal */
   .overlay{position:fixed;inset:0;background:rgb(16 24 39 / .45);display:flex;align-items:center;justify-content:center;z-index:50}
   .modal{background:var(--bg);border-radius:14px;padding:24px;width:min(440px,92vw);box-shadow:0 20px 50px rgb(16 24 39/.25)}
   .modal h2{margin:0 0 4px;font-size:16px;font-weight:600}
@@ -115,16 +125,25 @@
 
   <div class="tiles" id="tiles"></div>
 
-  <div class="selbar">
-    <div class="selhead">
-      <span class="t">Competitors</span>
-      <span class="actions">
-        <button class="linkbtn" id="selall">Select all</button>
-        <button class="linkbtn" id="selclear">Clear</button>
-        <button class="addbtn" id="addbtn">+ Add competitor</button>
-      </span>
+  <div class="controls">
+    <div class="ctl">
+      <label>Product</label>
+      <select class="ctlsel" id="prodsel"><option value="">All products</option></select>
     </div>
-    <div class="chips" id="brandchips"></div>
+    <div class="ctl">
+      <label>Competitors</label>
+      <div class="msel" id="msel">
+        <button class="msel-btn" id="mselbtn">All competitors</button>
+        <div class="msel-panel" id="mselpanel" hidden>
+          <div class="msel-actions">
+            <button class="linkbtn" id="selall">Select all</button>
+            <button class="linkbtn" id="selclear">Clear</button>
+          </div>
+          <div class="msel-list" id="msellist"></div>
+        </div>
+      </div>
+    </div>
+    <button class="addbtn" id="addbtn">+ Add competitor</button>
   </div>
 
   <div class="tabs" role="tablist">
@@ -141,7 +160,9 @@ const $ = s => document.querySelector(s);
 const esc = s => (s ?? '').toString().replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const inr = n => n == null ? '—' : '₹' + Math.round(n).toLocaleString('en-IN');
 const OUR = 'AreoVeda';
-let state = { tab: 'pricing', brands: [], selected: new Set(), battlecard: null, reviews: null };
+const amz = a => `https://www.amazon.in/dp/${encodeURIComponent(a)}`;
+const who = (brand, name, asin, img) => `<div class="who">${img ? `<img src="${esc(img)}" alt="" loading="lazy">` : '<span class="noimg"></span>'}<span><span class="b"><a href="${amz(asin)}" target="_blank" rel="noopener">${esc(brand)}</a></span>${name ? `<span class="p">${esc(name)}</span>` : ''}</span></div>`;
+let state = { tab: 'pricing', product: '', brands: [], selected: new Set(), battlecard: null, reviews: null };
 
 async function getJSON(url, opts) {
   const r = await fetch(url, opts);
@@ -150,7 +171,7 @@ async function getJSON(url, opts) {
   return j;
 }
 
-/* ── summary + selector ── */
+/* ── summary ── */
 async function loadSummary() {
   const s = await getJSON('/api/summary');
   $('#asof').textContent = 'Scraped ' + (s.as_of || '').slice(0, 10);
@@ -161,74 +182,112 @@ async function loadSummary() {
     <div class="tile"><div class="n">${s.our_avg_rating ?? '—'} <span class="vs">vs ${s.rival_avg_rating ?? '—'}</span></div><div class="l">our avg rating vs rivals</div></div>`;
 }
 
+/* ── dropdowns ── */
 async function loadBrands() {
   state.brands = await getJSON('/api/competitors');
   state.selected = new Set(state.brands.map(b => b.brand));
-  renderChips();
+  renderMsel();
 }
-function renderChips() {
-  $('#brandchips').innerHTML = state.brands.map(b => `
-    <span class="cchip ${state.selected.has(b.brand) ? 'on' : ''}" data-b="${esc(b.brand)}">${esc(b.brand)} <span class="ct">${b.pairs}</span></span>`).join('');
-  document.querySelectorAll('.cchip').forEach(c => c.addEventListener('click', () => {
-    const b = c.dataset.b;
-    state.selected.has(b) ? state.selected.delete(b) : state.selected.add(b);
-    renderChips(); render();
+function mselLabel() {
+  const n = state.selected.size, total = state.brands.length;
+  $('#mselbtn').textContent = n === total ? `All competitors (${total})` : n === 0 ? 'No competitors selected' : `${n} of ${total} competitors`;
+}
+function renderMsel() {
+  $('#msellist').innerHTML = state.brands.map(b => `
+    <label class="msel-item"><input type="checkbox" data-b="${esc(b.brand)}" ${state.selected.has(b.brand) ? 'checked' : ''}>
+      ${esc(b.brand)} <span class="ct">${b.pairs} product${b.pairs == 1 ? '' : 's'}</span></label>`).join('');
+  document.querySelectorAll('#msellist input').forEach(cb => cb.addEventListener('change', () => {
+    cb.checked ? state.selected.add(cb.dataset.b) : state.selected.delete(cb.dataset.b);
+    mselLabel(); render();
   }));
+  mselLabel();
 }
-$('#selall').addEventListener('click', () => { state.selected = new Set(state.brands.map(b => b.brand)); renderChips(); render(); });
-$('#selclear').addEventListener('click', () => { state.selected = new Set(); renderChips(); render(); });
+$('#mselbtn').addEventListener('click', () => { $('#mselpanel').hidden = !$('#mselpanel').hidden; });
+document.addEventListener('click', e => { if (!$('#msel').contains(e.target)) $('#mselpanel').hidden = true; });
+$('#selall').addEventListener('click', () => { state.selected = new Set(state.brands.map(b => b.brand)); renderMsel(); render(); });
+$('#selclear').addEventListener('click', () => { state.selected = new Set(); renderMsel(); render(); });
+$('#prodsel').addEventListener('change', () => { state.product = $('#prodsel').value; render(); });
 
-/* ── pivots ── */
-function selectedBrands() { return state.brands.map(b => b.brand).filter(b => state.selected.has(b)); }
-
-function pivotHead(cols) {
-  return `<tr><th class="rowlab">Product</th><th class="ours">${OUR}</th>${cols.map(b => `<th>${esc(b)}</th>`).join('')}</tr>`;
+function fillProducts() {
+  const opts = state.battlecard.map(p => `<option value="${esc(p.own_product)}">${esc(p.own_product)}</option>`).join('');
+  $('#prodsel').innerHTML = `<option value="">All products</option>` + opts;
 }
+
+/* ── comparison tables ──
+   Reference-and-delta layout: our row first (highlighted), then each rival with the
+   SIGNED difference vs ours. Red = rival beats us on that column, green = we win. */
+function visibleProducts() {
+  return state.battlecard.filter(p => !state.product || p.own_product === state.product);
+}
+function rivalsOf(p) {
+  return p.rivals.filter(r => state.selected.has(r.brand));
+}
+
+function priceDelta(our, theirs) {
+  if (our == null || theirs == null) return '<span class="muted">—</span>';
+  const d = theirs - our;
+  if (Math.round(d) === 0) return '<span class="delta zero">same price</span>';
+  const pct = Math.round(Math.abs(d) / our * 100);
+  const amt = '₹' + Math.round(Math.abs(d)).toLocaleString('en-IN');
+  return d < 0
+    ? `<span class="delta neg">−${amt} · ${pct}% cheaper</span>`
+    : `<span class="delta pos">+${amt} · ${pct}% pricier</span>`;
+}
+function ratingDelta(our, theirs) {
+  if (our == null || theirs == null) return '<span class="muted">—</span>';
+  const d = +(theirs - our).toFixed(1);
+  if (d === 0) return '<span class="delta zero">same rating</span>';
+  return d > 0 ? `<span class="delta neg">+${d.toFixed(1)}★ above us</span>`
+               : `<span class="delta pos">${d.toFixed(1)}★ below us</span>`;
+}
+const avail = a => (a || '').toLowerCase().includes('in stock') ? '<span class="okb">in stock</span>' : '<span class="oosb">out of stock</span>';
 
 function renderPricing() {
-  const cols = selectedBrands();
-  const rows = state.battlecard.map(p => {
-    const byBrand = {};
-    for (const r of p.rivals) (byBrand[r.brand] ||= []).push(r);
-    const cells = cols.map(b => {
-      const rs = byBrand[b];
-      if (!rs) return `<td class="empty">—</td>`;
-      return `<td>` + rs.map(r => {
-        if (r.pending) return `<span class="pendb">scrape queued</span>`;
-        const cls = r.price != null && p.our_price != null ? (+r.price < +p.our_price ? 'cheaper' : 'pricier') : '';
-        const oos = (r.availability || '').toLowerCase().includes('in stock') ? '' : '<span class="oosb">OOS</span>';
-        return `<span class="${cls}">${inr(r.price)}</span>${oos}`;
-      }).join('<br>') + `</td>`;
-    }).join('');
-    return `<tr><td class="rowlab">${esc(p.own_product)}</td><td class="ours">${inr(p.our_price)}</td>${cells}</tr>`;
-  }).join('');
-  $('#panel').innerHTML = `<table><thead>${pivotHead(cols)}</thead><tbody>${rows}</tbody></table>`;
+  const prods = visibleProducts();
+  let body = '';
+  for (const p of prods) {
+    const rs = rivalsOf(p).slice().sort((a, b) => (a.price ?? 1e9) - (b.price ?? 1e9));
+    if (prods.length > 1) body += `<tr class="group"><td colspan="4">${esc(p.own_product)}</td></tr>`;
+    body += `<tr class="ours"><td>${who(OUR + ' — ' + p.own_product, '', p.own_asin, p.our_image)}</td>
+      <td>${inr(p.our_price)}</td><td><span class="muted">reference</span></td><td>${avail(p.our_availability)}</td></tr>`;
+    if (!rs.length) body += `<tr class="rival"><td colspan="4" class="muted">no selected competitors matched to this product</td></tr>`;
+    for (const r of rs) {
+      body += `<tr class="rival"><td>${who(r.brand, r.name, r.asin, r.image)}</td>
+        <td>${r.pending ? '<span class="pendb">scrape queued</span>' : inr(r.price)}</td>
+        <td>${r.pending ? '<span class="muted">—</span>' : priceDelta(p.our_price, r.price)}</td>
+        <td>${r.pending ? '<span class="muted">—</span>' : avail(r.availability)}</td></tr>`;
+    }
+  }
+  $('#panel').innerHTML = `<table>
+    <thead><tr><th>Product / competitor</th><th>Price</th><th>Difference vs ours</th><th>Stock</th></tr></thead>
+    <tbody>${body}</tbody></table>`;
   $('#drill').innerHTML = '';
 }
 
-function starCell(rating, count, extra = '') {
-  if (rating == null) return `<td class="empty">—</td>`;
-  const cls = +rating >= 4.3 ? 'high' : +rating < 4 ? 'low' : '';
-  return `<td${extra}><span class="cellstars ${cls}">${rating}★</span><span class="sub">${count == null ? '' : (+count).toLocaleString('en-IN') + ' ratings'}</span></td>`;
-}
-
 function renderReviews() {
-  const cols = selectedBrands();
-  const rows = state.battlecard.map(p => {
-    const byBrand = {};
-    for (const r of p.rivals) (byBrand[r.brand] ||= []).push(r);
-    const cells = cols.map(b => {
-      const rs = byBrand[b];
-      if (!rs) return `<td class="empty">—</td>`;
-      const r = rs[0];
-      if (r.pending) return `<td><span class="pendb">scrape queued</span></td>`;
-      return starCell(r.rating, r.reviews, ` data-asin="${esc(r.asin)}" data-label="${esc(b)} — vs ${esc(p.own_product)}" style="cursor:pointer"`);
-    }).join('');
-    return `<tr><td class="rowlab">${esc(p.own_product)}</td>${starCell(p.our_rating, p.our_reviews, ` class="ours" data-asin="${esc(p.own_asin)}" data-label="${OUR} — ${esc(p.own_product)}" style="cursor:pointer"`).replace('<td ', '<td class="ours" ')}${cells}</tr>`;
-  }).join('');
-  $('#panel').innerHTML = `<table><thead>${pivotHead(cols)}</thead><tbody>${rows}</tbody></table>`;
-  $('#drill').innerHTML = '<div class="drill" style="border-top:none;padding:10px 16px;color:var(--ink-4);font-size:12.5px">Click any rating to read that listing\'s recent reviews.</div>';
-  document.querySelectorAll('td[data-asin]').forEach(td => td.addEventListener('click', () => showDrill(td.dataset.asin, td.dataset.label)));
+  const prods = visibleProducts();
+  let body = '';
+  for (const p of prods) {
+    const rs = rivalsOf(p).slice().sort((a, b) => (b.rating ?? -1) - (a.rating ?? -1));
+    if (prods.length > 1) body += `<tr class="group"><td colspan="5">${esc(p.own_product)}</td></tr>`;
+    body += `<tr class="ours"><td>${who(OUR + ' — ' + p.own_product, '', p.own_asin, p.our_image)}</td>
+      <td>${p.our_rating ?? '—'}★</td><td><span class="muted">reference</span></td>
+      <td>${p.our_reviews == null ? '—' : (+p.our_reviews).toLocaleString('en-IN')}</td>
+      <td><span class="revlink" data-asin="${esc(p.own_asin)}" data-label="${OUR} — ${esc(p.own_product)}">read reviews</span></td></tr>`;
+    if (!rs.length) body += `<tr class="rival"><td colspan="5" class="muted">no selected competitors matched to this product</td></tr>`;
+    for (const r of rs) {
+      body += `<tr class="rival"><td>${who(r.brand, r.name, r.asin, r.image)}</td>
+        <td>${r.pending ? '<span class="pendb">scrape queued</span>' : (r.rating ?? '—') + '★'}</td>
+        <td>${r.pending ? '<span class="muted">—</span>' : ratingDelta(p.our_rating, r.rating)}</td>
+        <td>${r.reviews == null ? '—' : (+r.reviews).toLocaleString('en-IN')}</td>
+        <td>${r.pending ? '' : `<span class="revlink" data-asin="${esc(r.asin)}" data-label="${esc(r.brand)} — vs ${esc(p.own_product)}">read reviews</span>`}</td></tr>`;
+    }
+  }
+  $('#panel').innerHTML = `<table>
+    <thead><tr><th>Product / competitor</th><th>Rating</th><th>Difference vs ours</th><th># Ratings</th><th></th></tr></thead>
+    <tbody>${body}</tbody></table>`;
+  $('#drill').innerHTML = '';
+  document.querySelectorAll('.revlink').forEach(el => el.addEventListener('click', () => showDrill(el.dataset.asin, el.dataset.label)));
 }
 
 function showDrill(asin, label) {
@@ -244,9 +303,10 @@ function showDrill(asin, label) {
         <div class="d">${esc(r.review_date || '')}</div>
       </div>`).join('') || '<div class="skel">No reviews captured for this listing yet.</div>'}
     </div></div>`;
+  $('#drill').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
-/* ── add competitor modal ── */
+/* ── add competitor ── */
 $('#addbtn').addEventListener('click', () => {
   const prods = state.battlecard ? state.battlecard.map(p => p.own_product) : [];
   $('#modalroot').innerHTML = `<div class="overlay" id="ov">
@@ -261,7 +321,7 @@ $('#addbtn').addEventListener('click', () => {
       <div class="merr" id="merr"></div>
       <div class="row">
         <button class="btn2" id="mcancel">Cancel</button>
-        <button class="addbtn" id="msave">Add &amp; queue scrape</button>
+        <button class="addbtn" style="margin:0" id="msave">Add &amp; queue scrape</button>
       </div>
     </div></div>`;
   $('#mcancel').addEventListener('click', () => $('#modalroot').innerHTML = '');
@@ -274,7 +334,7 @@ $('#addbtn').addEventListener('click', () => {
       $('#modalroot').innerHTML = '';
       toast('Competitor added — scrape queued');
       await Promise.all([loadBrands(), loadData()]);
-      render();
+      fillProducts(); render();
     } catch (e) { $('#merr').textContent = e.message; }
   });
 });
@@ -296,7 +356,7 @@ document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () =>
   b.classList.add('on'); state.tab = b.dataset.tab; render();
 }));
 (async () => {
-  try { await Promise.all([loadSummary(), loadBrands(), loadData()]); render(); }
+  try { await Promise.all([loadSummary(), loadBrands(), loadData()]); fillProducts(); render(); }
   catch (e) { $('#panel').innerHTML = `<div class="err">${esc(e.message)}</div>`; }
 })();
 </script>
