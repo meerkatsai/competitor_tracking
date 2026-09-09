@@ -9,14 +9,16 @@ services:
       - key: DATABASE_URL
         sync: false
 
-  # Scheduled scrape. TEST schedule: every 30 min (two runs to validate upserts).
-  # After validation flip schedule to weekly ("0 3 * * 1" = Mondays 03:00 UTC)
-  # and set SNAPSHOT_TABLE=listing_snapshots to write the real table.
+  # Scheduled scrape — weekly, Mondays 03:00 UTC (08:30 IST).
+  # Validated 9 Sep 2026: two 30-min scheduled runs on Render, 56/56 listings each,
+  # day-grain upserts confirmed (56 rows after both runs, not 112).
+  # Still writing to _test tables; to go live set SNAPSHOT_TABLE=listing_snapshots
+  # (and point RUNS_TABLE at a real run log) in the service env.
   - type: cron
     name: competitor_scrape
     runtime: node
     plan: starter
-    schedule: "*/30 * * * *"
+    schedule: "0 3 * * 1"
     buildCommand: npm install
     startCommand: node scripts/scrape.mjs
     envVars:
