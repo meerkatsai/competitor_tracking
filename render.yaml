@@ -8,3 +8,23 @@ services:
     envVars:
       - key: DATABASE_URL
         sync: false
+
+  # Scheduled scrape. TEST schedule: every 30 min (two runs to validate upserts).
+  # After validation flip schedule to weekly ("0 3 * * 1" = Mondays 03:00 UTC)
+  # and set SNAPSHOT_TABLE=listing_snapshots to write the real table.
+  - type: cron
+    name: competitor_scrape
+    runtime: node
+    plan: starter
+    schedule: "*/30 * * * *"
+    buildCommand: npm install
+    startCommand: node scripts/scrape.mjs
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: PARALLEL_API_KEY
+        sync: false
+      - key: SNAPSHOT_TABLE
+        value: listing_snapshots_test
+      - key: RUNS_TABLE
+        value: scrape_runs_test
