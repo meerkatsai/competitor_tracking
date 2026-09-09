@@ -10,6 +10,8 @@ import pg from 'pg';
 const KEY = process.env.PARALLEL_API_KEY;
 const SNAPSHOT_TABLE = process.env.SNAPSHOT_TABLE || 'listing_snapshots_test';
 const RUNS_TABLE = process.env.RUNS_TABLE || 'scrape_runs_test';
+// Same placeholder convention as server.js: real workspace UUID via env after integration.
+const WS = process.env.WORKSPACE_ID || 'areoveda';
 if (!KEY || !process.env.DATABASE_URL) {
   console.error('DATABASE_URL and PARALLEL_API_KEY are required'); process.exit(1);
 }
@@ -43,8 +45,8 @@ await db.connect();
 const startedAt = new Date().toISOString();
 const runNo = (await db.query(`SELECT coalesce(max(run_no),0)+1 AS n FROM ${RUNS_TABLE}`)).rows[0].n;
 const listings = (await db.query(`
-  SELECT DISTINCT own_asin AS asin, true AS is_own FROM matched_sku_map WHERE own_asin IS NOT NULL
-  UNION SELECT DISTINCT rival_asin, false FROM matched_sku_map WHERE rival_asin IS NOT NULL`)).rows;
+  SELECT DISTINCT own_asin AS asin, true AS is_own FROM matched_sku_map WHERE workspace_id = $1 AND own_asin IS NOT NULL
+  UNION SELECT DISTINCT rival_asin, false FROM matched_sku_map WHERE workspace_id = $1 AND rival_asin IS NOT NULL`, [WS])).rows;
 console.log(`run ${runNo}: scraping ${listings.length} listings -> ${SNAPSHOT_TABLE}`);
 await db.query(`
   INSERT INTO ${RUNS_TABLE} (run_no, started_at, listings_attempted) VALUES ($1, $2, $3)
@@ -85,12 +87,13 @@ for (const r of runs) {
     const params = [r.asin, r.is_own, d.title, d.price, d.mrp, d.rating, d.review_count, d.availability];
     if (testMode) params.push(runNo);
     params.push(r.run_id);
+    params.push(WS);
     await db.query(`
       INSERT INTO ${SNAPSHOT_TABLE}
         (workspace_id, snapshot_date, scraped_at, marketplace, asin, is_own,
          title, price, mrp, rating, review_count, availability${runCols}, run_id)
-      VALUES ('areoveda', (now() AT TIME ZONE 'Asia/Kolkata')::date, now(), 'amazon', $1, $2,
-              $3, $4, $5, $6, $7, $8${runVals}, $${params.length})
+      VALUES ($${params.length}, (now() AT TIME ZONE 'Asia/Kolkata')::date, now(), 'amazon', $1, $2,
+              $3, $4, $5, $6, $7, $8${runVals}, $${params.length - 1})
       ON CONFLICT (workspace_id, snapshot_date, marketplace, asin) DO UPDATE SET
         title = EXCLUDED.title, price = EXCLUDED.price, mrp = EXCLUDED.mrp,
         rating = EXCLUDED.rating, review_count = EXCLUDED.review_count,

@@ -9,16 +9,18 @@ services:
       - key: DATABASE_URL
         sync: false
 
-  # Scheduled scrape — weekly, Mondays 03:00 UTC (08:30 IST).
+  # Scheduled scrape — weekly, Wednesdays 03:00 UTC (08:30 IST).
   # Validated 9 Sep 2026: two 30-min scheduled runs on Render, 56/56 listings each,
   # day-grain upserts confirmed (56 rows after both runs, not 112).
   # Still writing to _test tables; to go live set SNAPSHOT_TABLE=listing_snapshots
   # (and point RUNS_TABLE at a real run log) in the service env.
+  # WORKSPACE_ID (both services): placeholder 'areoveda' baked into code defaults;
+  # set the real Lifecell workspace UUID in env after product integration and retag rows.
   - type: cron
     name: competitor_scrape
     runtime: node
     plan: starter
-    schedule: "0 3 * * 1"
+    schedule: "0 3 * * 3"
     buildCommand: npm install
     startCommand: node scripts/scrape.mjs
     envVars:
